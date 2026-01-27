@@ -8,10 +8,13 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use("/api/upload", require("./routes/uploadRoutes"));
+app.use("/uploads", express.static("uploads"));
 
 // Routes
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
+app.use("/api/entries", require("./routes/entryRoutes"));
 
 app.get("/", (req, res) => {
   res.send("✅ Tri-Pillar Backend Running...");

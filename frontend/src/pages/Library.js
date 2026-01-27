@@ -1,161 +1,174 @@
+import { useEffect, useState } from "react";
+import { API } from "../api/api";
 import BottomNav from "../components/BottomNav";
 
 export default function Library() {
+  const [entries, setEntries] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [form, setForm] = useState({ title: "", note: "", file: null });
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    API.get("/api/entries").then((res) => setEntries(res.data));
+  }, []);
+
+  /* =====================
+     EDIT LOGIC
+  ===================== */
+  const startEdit = (entry) => {
+    setEditingId(entry._id);
+    setForm({ title: entry.title, note: entry.note || "", file: null });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setForm({ title: "", note: "", file: null });
+  };
+
+  const saveEdit = async (id) => {
+    const data = new FormData();
+    data.append("title", form.title);
+    data.append("note", form.note);
+    if (form.file) data.append("file", form.file);
+
+    try {
+      const res = await API.put(`/api/entries/${id}`, data);
+      setEntries(entries.map((e) => (e._id === id ? res.data.entry : e)));
+      cancelEdit();
+    } catch {
+      alert("❌ Update failed");
+    }
+  };
+
+  /* =====================
+     DELETE LOGIC ✅
+  ===================== */
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this entry permanently?")) return;
+
+    try {
+      await API.delete(`/api/entries/${id}`);
+      setEntries(entries.filter((e) => e._id !== id));
+    } catch {
+      alert("❌ Delete failed");
+    }
+  };
+
   return (
-    <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white min-h-screen pb-28">
-      <div className="max-w-[430px] mx-auto">
-        {/* Top Header */}
-        <header className="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/10">
-          <div className="flex items-center p-4 pb-2 justify-between">
-            <div className="size-10 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center">
-              👤
+    <div className="bg-background-light dark:bg-background-dark min-h-screen pb-28 px-4 text-white">
+      <div className="max-w-6xl mx-auto pt-10">
+        <h1 className="text-2xl font-bold mb-6">📚 My Library</h1>
+        <input
+          type="text"
+          placeholder="🔍 Search by title, note or pillar..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full mb-6 p-3 rounded-lg text-black"
+        />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {entries
+  .filter((item) =>
+    item.title.toLowerCase().includes(search.toLowerCase()) ||
+    item.note?.toLowerCase().includes(search.toLowerCase()) ||
+    item.pillar.toLowerCase().includes(search.toLowerCase())
+  )
+  .map((item) => (
+
+            <div key={item._id} className="bg-[#19332b] p-4 rounded-xl">
+
+              {/* ================= EDIT MODE ================= */}
+              {editingId === item._id ? (
+                <>
+                  <input
+                    className="w-full p-2 mb-2 text-black rounded"
+                    value={form.title}
+                    onChange={(e) =>
+                      setForm({ ...form, title: e.target.value })
+                    }
+                  />
+
+                  <textarea
+                    className="w-full p-2 mb-2 text-black rounded"
+                    value={form.note}
+                    onChange={(e) =>
+                      setForm({ ...form, note: e.target.value })
+                    }
+                  />
+
+                  <input
+                    type="file"
+                    className="mb-2"
+                    onChange={(e) => {
+                      if (item.fileUrl) {
+                        const ok = window.confirm(
+                          "This will replace the existing file. Continue?"
+                        );
+                        if (!ok) return;
+                      }
+                      setForm({ ...form, file: e.target.files[0] });
+                    }}
+                  />
+
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => saveEdit(item._id)}
+                      className="flex-1 bg-green-500 py-2 rounded font-bold"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={cancelEdit}
+                      className="flex-1 bg-gray-500 py-2 rounded font-bold"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              ) : (
+                /* ================= VIEW MODE ================= */
+                <>
+                  <p className="text-xs text-primary uppercase">
+                    {item.pillar}
+                  </p>
+                  <h2 className="font-bold">{item.title}</h2>
+                  <p className="text-sm">{item.note}</p>
+
+                  {item.fileUrl && (
+                    <a
+                      href={`http://localhost:5000${item.fileUrl}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary text-sm underline"
+                    >
+                      View File
+                    </a>
+                  )}
+
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => startEdit(item)}
+                      className="flex-1 bg-blue-500 py-2 rounded font-bold"
+                    >
+                      ✏️ Edit
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(item._id)}
+                      className="flex-1 bg-red-500 py-2 rounded font-bold"
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
-
-            <h1 className="text-lg font-bold flex-1 text-center">
-              Resource Library
-            </h1>
-
-            <button className="size-10 rounded-lg flex items-center justify-center text-slate-600 dark:text-white hover:bg-white/10 transition">
-              ⚙️
-            </button>
-          </div>
-        </header>
-
-        {/* Search */}
-        <div className="px-4 py-4">
-          <div className="flex items-center rounded-xl shadow-sm bg-white dark:bg-white/10 overflow-hidden">
-            <div className="pl-4 pr-2 text-primary text-xl">🔍</div>
-            <input
-              className="w-full h-12 bg-transparent outline-none px-2 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40"
-              placeholder="Search documents, guides, notes..."
-            />
-          </div>
+          ))}
         </div>
-
-        {/* Filter chips */}
-        <div className="flex gap-3 px-4 pb-4 overflow-x-auto">
-          <div className="flex h-9 items-center justify-center gap-2 rounded-full bg-primary px-5 shadow-sm shadow-primary/20">
-            <span className="text-background-dark">🎓</span>
-            <p className="text-background-dark text-sm font-bold">Education</p>
-          </div>
-
-          <div className="flex h-9 items-center justify-center gap-2 rounded-full bg-white dark:bg-white/10 px-5 border border-slate-200 dark:border-white/5">
-            <span className="text-primary">💚</span>
-            <p className="text-sm font-medium">Health</p>
-          </div>
-
-          <div className="flex h-9 items-center justify-center gap-2 rounded-full bg-white dark:bg-white/10 px-5 border border-slate-200 dark:border-white/5">
-            <span className="text-primary">💳</span>
-            <p className="text-sm font-medium">Finance</p>
-          </div>
-        </div>
-
-        {/* Categories */}
-        <div className="flex items-center justify-between px-4 pt-2 pb-2">
-          <h3 className="text-xl font-bold">Categories</h3>
-          <button className="text-primary text-sm font-semibold">
-            See all
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 p-4">
-          {/* Card 1 */}
-          <CategoryCard
-            title="Lecture Notes"
-            count="248 Files"
-            downloads="1.2k"
-            icon="📄"
-          />
-          {/* Card 2 */}
-          <CategoryCard
-            title="Research Papers"
-            count="124 Files"
-            downloads="850"
-            icon="📚"
-          />
-          {/* Card 3 */}
-          <CategoryCard
-            title="Shared by Peers"
-            count="512 Files"
-            downloads="3.4k"
-            icon="👥"
-          />
-          {/* Card 4 */}
-          <CategoryCard
-            title="Guides & Templates"
-            count="96 Files"
-            downloads="2.1k"
-            icon="📝"
-          />
-        </div>
-
-        {/* Recently Added */}
-        <div className="px-4 pt-2 pb-2">
-          <h3 className="text-xl font-bold">Recently Added</h3>
-        </div>
-
-        <div className="px-4 space-y-3 pb-24">
-          <FileItem
-            icon="📕"
-            title="Macroeconomics_Final_Notes.pdf"
-            meta="2.4 MB • Added 2h ago"
-            downloads="124"
-          />
-          <FileItem
-            icon="📘"
-            title="Financial_Literacy_Guide.docx"
-            meta="1.1 MB • Added 5h ago"
-            downloads="88"
-          />
-        </div>
-
-        <BottomNav active="library" />
-      </div>
-    </div>
-  );
-}
-
-/* ---------------- Components ---------------- */
-
-function CategoryCard({ title, count, downloads, icon }) {
-  return (
-    <div className="relative overflow-hidden rounded-xl aspect-[4/5] shadow-lg bg-gradient-to-b from-background-dark/50 to-background-dark flex flex-col justify-end p-4">
-      <div className="absolute top-3 right-3 bg-white/10 backdrop-blur-md rounded-full px-2 py-1 flex items-center gap-1">
-        <span className="text-[12px] text-primary">⬇️</span>
-        <span className="text-[10px] text-white font-bold">{downloads}</span>
       </div>
 
-      <div className="text-primary mb-2 text-2xl">{icon}</div>
-      <p className="text-white text-base font-bold leading-tight line-clamp-2">
-        {title}
-      </p>
-      <p className="text-white/60 text-[10px] mt-1 uppercase tracking-wider font-semibold">
-        {count}
-      </p>
-    </div>
-  );
-}
-
-function FileItem({ icon, title, meta, downloads }) {
-  return (
-    <div className="flex items-center gap-4 p-3 bg-white dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5">
-      <div className="size-12 rounded-lg bg-primary/10 flex items-center justify-center text-xl">
-        {icon}
-      </div>
-
-      <div className="flex-1">
-        <h4 className="text-sm font-bold">{title}</h4>
-        <p className="text-[12px] text-slate-500 dark:text-white/40">{meta}</p>
-      </div>
-
-      <div className="flex flex-col items-center gap-1">
-        <button className="size-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-          ⬇️
-        </button>
-        <span className="text-[10px] text-slate-400 dark:text-white/30">
-          {downloads}
-        </span>
-      </div>
+      <BottomNav active="library" />
     </div>
   );
 }

@@ -1,9 +1,48 @@
 import BottomNav from "../components/BottomNav";
+import { useEffect, useRef, useState } from "react";
+import { API } from "../api/api";
 
 export default function Profile() {
+  const [user, setUser] = useState(null);
+  const fileRef = useRef(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await API.get("/api/users/me");
+        setUser(res.data);
+      } catch (err) {
+        console.log("❌ Failed to fetch user:", err.response?.data?.message);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  };
+
+  // ✅ upload avatar
+  const handleAvatarChange = async (file) => {
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    try {
+      const res = await API.put("/api/users/avatar", formData);
+      setUser({ ...user, avatar: res.data.avatar });
+    } catch (err) {
+      alert("❌ Avatar upload failed");
+    }
+  };
+
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white min-h-screen pb-28">
-      <div className="max-w-[430px] mx-auto">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
         {/* Header */}
         <header className="flex items-center justify-between p-4 pb-2 sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-white/10">
           <button className="w-12 h-12 flex items-center justify-start text-xl">
@@ -22,19 +61,50 @@ export default function Profile() {
         {/* Profile Section */}
         <section className="p-6 flex flex-col items-center gap-4">
           <div className="relative">
-            <div className="w-32 h-32 rounded-full bg-slate-300 dark:bg-slate-700 border-4 border-primary/30 flex items-center justify-center text-5xl">
-              👤
-            </div>
 
-            <button className="absolute bottom-2 right-2 bg-primary text-background-dark p-2 rounded-full shadow-lg">
+            {/* Avatar */}
+            {user?.avatar ? (
+              <img
+                src={`http://localhost:5000${user.avatar}`}
+                alt="avatar"
+                className="w-32 h-32 rounded-full object-cover border-4 border-primary/30"
+              />
+            ) : (
+              <div className="w-32 h-32 rounded-full bg-slate-300 dark:bg-slate-700 border-4 border-primary/30 flex items-center justify-center text-5xl">
+                👤
+              </div>
+            )}
+
+            {/* Edit Button */}
+            <button
+              onClick={() => fileRef.current.click()}
+              className="absolute bottom-2 right-2 bg-primary text-background-dark p-2 rounded-full shadow-lg"
+            >
               ✏️
             </button>
+
+            {/* Hidden File Input */}
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => handleAvatarChange(e.target.files[0])}
+            />
           </div>
 
           <div className="text-center">
-            <h3 className="text-2xl font-bold">Alex Johnson</h3>
-            <p className="text-primary font-medium">B.S. Computer Science</p>
-            <p className="text-primary/70 text-sm">Stanford University</p>
+            <h3 className="text-2xl font-bold">
+              {user ? user.name : "Loading..."}
+            </h3>
+
+            <p className="text-primary font-medium">
+              {user ? user.email : ""}
+            </p>
+
+            <p className="text-primary/70 text-sm">
+              Role: {user ? user.role : ""}
+            </p>
           </div>
         </section>
 
@@ -109,9 +179,12 @@ export default function Profile() {
           </div>
         </section>
 
-        {/* Logout Button */}
+        {/* Logout */}
         <section className="p-8 flex flex-col items-center gap-4">
-          <button className="w-full h-14 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl font-bold flex items-center justify-center gap-2 transition">
+          <button
+            onClick={handleLogout}
+            className="w-full h-14 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl font-bold flex items-center justify-center gap-2 transition"
+          >
             🚪 Log Out
           </button>
 
@@ -120,7 +193,6 @@ export default function Profile() {
           </p>
         </section>
 
-        {/* Bottom Nav */}
         <BottomNav active="profile" />
       </div>
     </div>

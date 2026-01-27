@@ -3,7 +3,8 @@ import BottomNav from "../components/BottomNav";
 export default function Education() {
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-800 dark:text-slate-100 min-h-screen pb-28">
-      <div className="max-w-[430px] mx-auto">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
         {/* Header */}
         <header className="px-6 pt-8 flex justify-between items-center mb-6">
           <div>

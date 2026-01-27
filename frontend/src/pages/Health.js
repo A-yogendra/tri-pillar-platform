@@ -3,7 +3,8 @@ import BottomNav from "../components/BottomNav";
 export default function Health() {
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white min-h-screen pb-28">
-      <div className="max-w-[430px] mx-auto">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
         {/* Header */}
         <header className="flex items-center p-4 pb-2 justify-between sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md">
           <div className="flex items-center gap-3">

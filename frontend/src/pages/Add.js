@@ -1,66 +1,98 @@
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { API } from "../api/api";
+import BottomNav from "../components/BottomNav";
 
 export default function Add() {
-  const navigate = useNavigate();
+  const [pillar, setPillar] = useState("education");
+  const [title, setTitle] = useState("");
+  const [details, setDetails] = useState("");
+  const [file, setFile] = useState(null);
+
+  const handleSubmit = async () => {
+    try {
+      // ✅ 1) First upload file (if selected)
+      let fileUrl = "";
+
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const uploadRes = await API.post("/api/upload", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        fileUrl = uploadRes.data.fileUrl;
+      }
+
+      // ✅ 2) Save entry with fileUrl
+      const res = await API.post("/api/entries", {
+        pillar,
+        title,
+        note: details,
+        fileUrl, // ✅ store uploaded file url
+      });
+
+      alert("✅ Entry Added Successfully!");
+      console.log(res.data);
+
+      setTitle("");
+      setDetails("");
+      setFile(null);
+    } catch (err) {
+      alert("❌ Failed: " + err.response?.data?.message);
+    }
+  };
 
   return (
-    <div className="bg-background-light dark:bg-background-dark min-h-screen text-slate-900 dark:text-white p-4">
-      <div className="max-w-[430px] mx-auto pt-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="size-10 rounded-full bg-white/10 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center"
-          >
-            ←
-          </button>
-          <h2 className="text-lg font-bold">Quick Add</h2>
-          <div className="size-10" />
-        </div>
+    <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white min-h-screen pb-28 px-4">
+      <div className="max-w-[430px] mx-auto pt-10 space-y-5">
+        <h1 className="text-2xl font-extrabold">➕ Add New Entry</h1>
 
-        {/* Cards */}
-        <div className="space-y-3">
-          <button
-            onClick={() => alert("Next: Add Task")}
-            className="w-full bg-white dark:bg-[#19332b] border border-slate-200 dark:border-white/10 rounded-xl p-4 text-left"
-          >
-            <p className="font-bold text-base">➕ Add Education Task</p>
-            <p className="text-xs text-slate-500 dark:text-[#92c9b7] mt-1">
-              Add assignment / deadline / reminder
-            </p>
-          </button>
+        {/* Pillar Select */}
+        <select
+          value={pillar}
+          onChange={(e) => setPillar(e.target.value)}
+          className="w-full p-3 rounded-lg text-black"
+        >
+          <option value="education">Education</option>
+          <option value="health">Health</option>
+          <option value="finance">Finance</option>
+        </select>
 
-          <button
-            onClick={() => alert("Next: Add Health Goal")}
-            className="w-full bg-white dark:bg-[#19332b] border border-slate-200 dark:border-white/10 rounded-xl p-4 text-left"
-          >
-            <p className="font-bold text-base">➕ Add Health Goal</p>
-            <p className="text-xs text-slate-500 dark:text-[#92c9b7] mt-1">
-              Water / steps / sleep goal
-            </p>
-          </button>
+        {/* Title */}
+        <input
+          className="w-full p-3 rounded-lg text-black"
+          placeholder="Enter title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
 
-          <button
-            onClick={() => alert("Next: Add Expense")}
-            className="w-full bg-white dark:bg-[#19332b] border border-slate-200 dark:border-white/10 rounded-xl p-4 text-left"
-          >
-            <p className="font-bold text-base">➕ Add Expense</p>
-            <p className="text-xs text-slate-500 dark:text-[#92c9b7] mt-1">
-              Track spending & budgets
-            </p>
-          </button>
+        {/* Details */}
+        <textarea
+          className="w-full p-3 rounded-lg text-black"
+          placeholder="Enter details"
+          value={details}
+          onChange={(e) => setDetails(e.target.value)}
+        />
 
-          <button
-            onClick={() => alert("Next: Upload Resource")}
-            className="w-full bg-white dark:bg-[#19332b] border border-slate-200 dark:border-white/10 rounded-xl p-4 text-left"
-          >
-            <p className="font-bold text-base">➕ Add Resource</p>
-            <p className="text-xs text-slate-500 dark:text-[#92c9b7] mt-1">
-              Save notes, PDFs, docs
-            </p>
-          </button>
-        </div>
+        {/* ✅ File Upload */}
+        <input
+          type="file"
+          onChange={(e) => setFile(e.target.files[0])}
+          className="w-full p-2 rounded-lg bg-white text-black"
+        />
+
+        {/* Submit */}
+        <button
+          onClick={handleSubmit}
+          className="w-full bg-primary text-[#11221c] font-bold py-3 rounded-xl"
+        >
+          ✅ Save Entry
+        </button>
       </div>
+
+      <BottomNav active="add" />
     </div>
   );
 }
+
