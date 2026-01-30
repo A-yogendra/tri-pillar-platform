@@ -15,6 +15,8 @@ import AdminRoute from "./components/AdminRoute";
 import AdminUsers from "./pages/AdminUsers";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminLogs from "./pages/AdminLogs";
+import AdminEntries from "./pages/AdminEntries";
+
 
 import PrivateRoute from "./components/PrivateRoute";
 
@@ -59,6 +61,14 @@ export default function App() {
   element={
     <AdminRoute>
       <AdminLogs />
+    </AdminRoute>
+  }
+/>
+<Route
+  path="/admin/entries"
+  element={
+    <AdminRoute>
+      <AdminEntries />
     </AdminRoute>
   }
 />

@@ -81,6 +81,35 @@ router.get("/logs", protect, adminOnly, async (req, res) => {
 
   res.json(logs);
 });
+// ✅ Admin: get ALL entries from all users
+router.get("/entries", protect, adminOnly, async (req, res) => {
+  try {
+    const entries = await Entry.find()
+      .populate("userId", "name email")
+      .sort({ createdAt: -1 });
+
+    res.json(entries);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ✅ Admin: delete ANY entry
+router.delete("/entries/:id", protect, adminOnly, async (req, res) => {
+  try {
+    const entry = await Entry.findById(req.params.id);
+
+    if (!entry) {
+      return res.status(404).json({ message: "Entry not found" });
+    }
+
+    await entry.deleteOne();
+    res.json({ message: "Entry deleted by admin" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 
 module.exports = router;
 

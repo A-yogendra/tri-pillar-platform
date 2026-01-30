@@ -18,6 +18,7 @@ export default function AdminLayout({ children }) {
         <nav className="flex flex-col gap-3 text-sm font-bold">
           <Link to="/admin" className="hover:text-primary">Dashboard</Link>
           <Link to="/admin/users" className="hover:text-primary">Users</Link>
+          <Link to="/admin/entries" className="hover:text-primary">Entries</Link>
           <Link to="/admin/logs" className="hover:text-primary">Logs</Link>
           <Link to="/admin/analytics" className="hover:text-primary">Analytics</Link>
         </nav>
@@ -38,3 +39,4 @@ export default function AdminLayout({ children }) {
     </div>
   );
 }
+
