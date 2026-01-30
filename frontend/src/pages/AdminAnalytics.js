@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { API } from "../api/api";
 import { Bar } from "react-chartjs-2";
+import AdminLayout from "../components/AdminLayout";
 
 import {
   Chart as ChartJS,
@@ -25,11 +26,17 @@ export default function AdminAnalytics() {
     fetchAnalytics();
   }, []);
 
-  if (!analytics) return <p className="text-white p-6">Loading...</p>;
+  if (!analytics) {
+    return (
+      <AdminLayout>
+        <p className="text-white p-6">Loading...</p>
+      </AdminLayout>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#0b1a16] text-white p-8 space-y-6">
-      <h1 className="text-3xl font-extrabold">📊 Admin Analytics</h1>
+    <AdminLayout>
+      <h1 className="text-3xl font-extrabold mb-6">📊 Admin Analytics</h1>
 
       <div className="bg-white/10 p-6 rounded-xl">
         <div className="h-[350px]">
@@ -55,6 +62,7 @@ export default function AdminAnalytics() {
           />
         </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }
+

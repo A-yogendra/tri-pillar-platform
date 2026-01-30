@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { API } from "../api/api";
 import { Bar } from "react-chartjs-2";
-import AdminSidebar from "../components/AdminSidebar";
+import AdminLayout from "../components/AdminLayout";
 
 import {
   Chart as ChartJS,
@@ -48,13 +48,8 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#0b1a16] text-white">
-
-      {/* Sidebar */}
-      <AdminSidebar />
-
-      {/* Main content */}
-      <div className="flex-1 p-8 space-y-8 overflow-y-auto">
+    <AdminLayout>
+      <div className="space-y-8">
 
         <h1 className="text-3xl font-extrabold">🛠 Admin Dashboard</h1>
 
@@ -160,6 +155,6 @@ export default function AdminDashboard() {
         </div>
 
       </div>
-    </div>
+    </AdminLayout>
   );
 }

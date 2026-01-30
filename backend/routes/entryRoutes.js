@@ -41,7 +41,6 @@ router.post("/", protect, upload.single("file"), async (req, res) => {
       fileType: req.file ? req.file.mimetype : "",
     });
 
-    // ✅ LOG HERE
     await logAction(req.user.id, "ENTRY_CREATED", title);
 
     res.status(201).json({ message: "✅ Entry added", entry });
@@ -73,9 +72,8 @@ router.put("/:id", protect, upload.single("file"), async (req, res) => {
 
     if (!entry) return res.status(404).json({ message: "Entry not found" });
 
-    if (entry.userId.toString() !== req.user.id) {
+    if (entry.userId.toString() !== req.user.id)
       return res.status(401).json({ message: "Not authorized" });
-    }
 
     entry.title = req.body.title || entry.title;
     entry.note = req.body.note || entry.note;
@@ -92,6 +90,7 @@ router.put("/:id", protect, upload.single("file"), async (req, res) => {
 
     await entry.save();
 
+    // ✅ LOG UPDATE
     await logAction(req.user.id, "ENTRY_UPDATED", entry.title);
 
     res.json({ message: "✅ Entry updated", entry });
@@ -110,21 +109,23 @@ router.delete("/:id", protect, async (req, res) => {
       userId: req.user.id,
     });
 
-    if (!entry) return res.status(404).json({ message: "Entry not found" });
+    if (!entry) {
+      return res.status(404).json({ message: "Entry not found" });
+    }
 
     if (entry.fileUrl) {
       const filePath = path.join(__dirname, "..", entry.fileUrl);
       fs.existsSync(filePath) && fs.unlinkSync(filePath);
     }
 
-    await entry.deleteOne();
-
     await logAction(req.user.id, "ENTRY_DELETED", entry.title);
 
+    await entry.deleteOne();
     res.json({ message: "✅ Entry deleted" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
+
 
 module.exports = router;

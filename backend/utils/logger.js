@@ -1,11 +1,19 @@
 const Log = require("../models/Log");
 
-const logAction = async (userId, action, details = "") => {
+async function logAction(userId, action, details = "") {
   try {
-    await Log.create({ userId, action, details });
+    console.log("🔥 LOGGING:", userId, action, details);
+
+    await Log.create({
+      userId,
+      action,
+      details,
+    });
+
+    console.log("✅ Log saved");
   } catch (err) {
-    console.error("Log error:", err.message);
+    console.error("❌ Log failed:", err.message);
   }
-};
+}
 
 module.exports = logAction;
