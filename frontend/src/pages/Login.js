@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { API } from "../api/api";
+import { jwtDecode } from "jwt-decode";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -8,23 +9,32 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // ✅ Auto redirect if already logged in
+  // auto redirect if already logged in
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) {
-      navigate("/home");
-    }
+    if (!token) return;
+
+    try {
+      const decoded = jwtDecode(token);
+      if (decoded.role === "admin") navigate("/admin");
+      else navigate("/home");
+    } catch {}
   }, [navigate]);
 
   const handleLogin = async () => {
     try {
       const res = await API.post("/api/auth/login", { email, password });
 
-      // ✅ store token
       localStorage.setItem("token", res.data.token);
 
+      const decoded = jwtDecode(res.data.token);
+
       alert("✅ Login Success!");
-      navigate("/home");
+
+      // 🔥 ROLE BASED REDIRECT
+      if (decoded.role === "admin") navigate("/admin");
+      else navigate("/home");
+
     } catch (err) {
       alert("❌ Login Failed: " + err.response?.data?.message);
     }
@@ -40,7 +50,7 @@ export default function Login() {
 
         <div className="space-y-4">
           <input
-            className="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/40 outline-none border border-white/10 focus:border-primary"
+            className="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/40 outline-none border border-white/10"
             placeholder="Enter email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -48,7 +58,7 @@ export default function Login() {
 
           <input
             type="password"
-            className="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/40 outline-none border border-white/10 focus:border-primary"
+            className="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/40 outline-none border border-white/10"
             placeholder="Enter password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -56,7 +66,7 @@ export default function Login() {
 
           <button
             onClick={handleLogin}
-            className="w-full py-3 rounded-xl bg-primary text-[#11221c] font-extrabold hover:opacity-90 transition"
+            className="w-full py-3 rounded-xl bg-primary text-[#11221c] font-extrabold"
           >
             Login
           </button>

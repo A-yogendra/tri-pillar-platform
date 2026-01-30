@@ -1,9 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
+import { getRole } from "../utils/getRole";
+
+
 
 export default function BottomNav({ active = "home" }) {
   // ✅ Hooks MUST be at top
   const navigate = useNavigate();
-
+  const role = getRole();
+  if (role === "admin") return null;
   const token = localStorage.getItem("token");
   if (!token) return null;
 

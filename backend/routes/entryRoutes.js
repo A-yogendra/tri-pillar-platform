@@ -4,6 +4,7 @@ const Entry = require("../models/Entry");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
+const logAction = require("../utils/logger");
 
 const router = express.Router();
 
@@ -20,7 +21,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 /* =======================
-   CREATE ENTRY (with file)
+   CREATE ENTRY
 ======================= */
 router.post("/", protect, upload.single("file"), async (req, res) => {
   try {
@@ -39,6 +40,9 @@ router.post("/", protect, upload.single("file"), async (req, res) => {
       fileUrl: req.file ? `/uploads/${req.file.filename}` : "",
       fileType: req.file ? req.file.mimetype : "",
     });
+
+    // ✅ LOG HERE
+    await logAction(req.user.id, "ENTRY_CREATED", title);
 
     res.status(201).json({ message: "✅ Entry added", entry });
   } catch (err) {
@@ -61,32 +65,24 @@ router.get("/", protect, async (req, res) => {
 });
 
 /* =======================
-   UPDATE ENTRY (edit)
+   UPDATE ENTRY
 ======================= */
 router.put("/:id", protect, upload.single("file"), async (req, res) => {
   try {
     const entry = await Entry.findById(req.params.id);
 
-    if (!entry) {
-      return res.status(404).json({ message: "Entry not found" });
-    }
+    if (!entry) return res.status(404).json({ message: "Entry not found" });
 
     if (entry.userId.toString() !== req.user.id) {
       return res.status(401).json({ message: "Not authorized" });
     }
 
-    // update text
     entry.title = req.body.title || entry.title;
     entry.note = req.body.note || entry.note;
 
-    // replace file if new one uploaded
     if (req.file) {
       if (entry.fileUrl) {
-        const oldFilePath = path.join(
-          __dirname,
-          "..",
-          entry.fileUrl
-        );
+        const oldFilePath = path.join(__dirname, "..", entry.fileUrl);
         fs.existsSync(oldFilePath) && fs.unlinkSync(oldFilePath);
       }
 
@@ -95,6 +91,9 @@ router.put("/:id", protect, upload.single("file"), async (req, res) => {
     }
 
     await entry.save();
+
+    await logAction(req.user.id, "ENTRY_UPDATED", entry.title);
+
     res.json({ message: "✅ Entry updated", entry });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -111,9 +110,7 @@ router.delete("/:id", protect, async (req, res) => {
       userId: req.user.id,
     });
 
-    if (!entry) {
-      return res.status(404).json({ message: "Entry not found" });
-    }
+    if (!entry) return res.status(404).json({ message: "Entry not found" });
 
     if (entry.fileUrl) {
       const filePath = path.join(__dirname, "..", entry.fileUrl);
@@ -121,6 +118,9 @@ router.delete("/:id", protect, async (req, res) => {
     }
 
     await entry.deleteOne();
+
+    await logAction(req.user.id, "ENTRY_DELETED", entry.title);
+
     res.json({ message: "✅ Entry deleted" });
   } catch (err) {
     res.status(500).json({ message: err.message });

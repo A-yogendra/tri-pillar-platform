@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+import About from "./pages/About";
 import Home from "./pages/Home";
 import Education from "./pages/Education";
 import Health from "./pages/Health";
@@ -8,6 +10,10 @@ import Library from "./pages/Library";
 import Add from "./pages/Add";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminRoute from "./components/AdminRoute";
+import AdminUsers from "./pages/AdminUsers";
+import AdminAnalytics from "./pages/AdminAnalytics";
 
 import PrivateRoute from "./components/PrivateRoute";
 
@@ -16,80 +22,48 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen bg-[#0b1a16]">
         <Routes>
-          <Route path="/" element={<Navigate to="/login" />} />
+          {/* 🌐 Public landing */}
+          <Route path="/" element={<Navigate to="/about" />} />
+          <Route path="/about" element={<About />} />
 
-          {/* ✅ Public pages */}
+          {/* 🔓 Auth */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-
-          {/* ✅ Protected pages */}
           <Route
-            path="/home"
+            path="/admin"
             element={
-              <PrivateRoute>
-                <Home />
-              </PrivateRoute>
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
             }
           />
-
           <Route
-            path="/education"
-            element={
-              <PrivateRoute>
-                <Education />
-              </PrivateRoute>
-            }
-          />
+  path="/admin/users"
+  element={
+    <AdminRoute>
+      <AdminUsers />
+    </AdminRoute>
+  }
+/>
+<Route
+  path="/admin/analytics"
+  element={
+    <AdminRoute>
+      <AdminAnalytics />
+    </AdminRoute>
+  }
+/>
 
-          <Route
-            path="/health"
-            element={
-              <PrivateRoute>
-                <Health />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="/finance"
-            element={
-              <PrivateRoute>
-                <Finance />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="/library"
-            element={
-              <PrivateRoute>
-                <Library />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="/add"
-            element={
-              <PrivateRoute>
-                <Add />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="/profile"
-            element={
-              <PrivateRoute>
-                <Profile />
-              </PrivateRoute>
-            }
-          />
+          {/* 🔒 Protected */}
+          <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
+          <Route path="/education" element={<PrivateRoute><Education /></PrivateRoute>} />
+          <Route path="/health" element={<PrivateRoute><Health /></PrivateRoute>} />
+          <Route path="/finance" element={<PrivateRoute><Finance /></PrivateRoute>} />
+          <Route path="/library" element={<PrivateRoute><Library /></PrivateRoute>} />
+          <Route path="/add" element={<PrivateRoute><Add /></PrivateRoute>} />
+          <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
         </Routes>
       </div>
     </BrowserRouter>
   );
 }
-
-
-
